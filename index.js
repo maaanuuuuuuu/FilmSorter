@@ -17,7 +17,15 @@ function isNotFilm(file, stats) {
 function cleanFilmName(filePath) {
     var dateregex = /\(([^)]+)\)/;
     var filmDates = dateregex.exec(filePath);
-    var filmDate = filmDates[1];
+    var returnFilm;
+    if (filmDates !== null) {
+        var filmDate = filmDates[1];
+        returnFilm = {
+            filmDate: filmDate
+        };
+    } else {
+        returnFilm = {};
+    }
     var filmName = filePath
         // file name
         .replace(/^.*[\\\/]/, '')
@@ -32,11 +40,10 @@ function cleanFilmName(filePath) {
     // trim
     filmName = filmName.trim();
 
-    return {
-        filmName,
-        filePath,
-        filmDate
-    }
+    returnFilm.filePath = filePath;
+    returnFilm.filmName = filmName;
+
+    return returnFilm;
 }
 
 
@@ -44,8 +51,13 @@ recursive(repertoryRoot, [isNotFilm], function (err, files) {
   // Files is an array of filename
   files.forEach(function(filePath) {
     var probableFilmNameAndPath = cleanFilmName(filePath);
-    console.log(probableFilmNameAndPath);
-    omdb.get({ title: probableFilmNameAndPath.filmName, year: probableFilmNameAndPath.filmDate }, true, function(err, movie) {
+    var search = {
+        title: probableFilmNameAndPath.filmName
+    };
+    if (probableFilmNameAndPath.filmDate !== null) {
+        search.year = probableFilmNameAndPath.filmDate;
+    }
+    omdb.get(search, true, function(err, movie) {
         if(err) {
             
             return console.error(err);
@@ -53,11 +65,13 @@ recursive(repertoryRoot, [isNotFilm], function (err, files) {
      
         if(!movie) {
             
-            return console.log('Movie not found!');
+            return console.log('Movie:'+probableFilmNameAndPath.filmName+' not found!');
         }
      
         console.log('%s (%d) %d/10', movie.title, movie.year, movie.imdb.rating);
         console.log(movie.plot);
+        // console.log(movie.genres);
+        // console.log(movie);
        
     });
   });

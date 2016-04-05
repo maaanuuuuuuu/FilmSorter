@@ -8,12 +8,23 @@ var authorizedExtensions = ['.flv', '.mpg'];
 var fileReleasePatterns = ['DVDRip', 'DVDSCR', 'XviD-MAXSPEED'];
 
 
+/**
+ * This function checks is pathed as a filter to the recursive function. It filters out files which are not films. Mostly depending on their extensions
+ * @param  {[type]}  file  
+ * @param  {[type]}  stats 
+ * @return {Boolean}       
+ */
 function isNotFilm(file, stats) {
     var fileExtension = path.extname(file);
 
     return (!stats.isDirectory()) && (authorizedExtensions.indexOf(fileExtension) === -1);
 }
 
+/**
+ * This function cleans the file name of forbiden terms and file extension. It also extracts the release date of the film
+ * @param  {[type]} filePath Full File Path
+ * @return {[type]}          an object containing filepath, filmname and filmDate eventually
+ */
 function cleanFilmName(filePath) {
     var dateregex = /\(([^)]+)\)/;
     var filmDates = dateregex.exec(filePath);
@@ -45,7 +56,6 @@ function cleanFilmName(filePath) {
 
     return returnFilm;
 }
-
 
 recursive(repertoryRoot, [isNotFilm], function (err, files) {
   // Files is an array of filename

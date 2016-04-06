@@ -45,11 +45,12 @@ function classifyMoviesByGenre(aMovieDB) {
 
 /**
  * This function creates an easily usable classification tree 
+ * @param  {[type]} aMovieDB         [description]
  * @param  {[type]} maxNbPerCategory [description]
- * @param  {[type]} aMovieDB    [description]
- * @return {[type]}             [description]
+ * @param  {[type]} minNbPerCategory [description]
+ * @return {[type]}                  [description]
  */
-function smartClassifier (maxNbPerCategory, aMovieDB) {
+function smartClassifier (aMovieDB, maxNbPerCategory, minNbPerCategory) {
 
 }
 

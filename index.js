@@ -27,12 +27,15 @@ function isNotFilm(file, stats) {
  * @return {[type]}          an associative array 'genre' => [Movies]
  */
 function classifyMoviesByGenre(aMovieDB) {
-    console.log(aMovieDB);
     var byGenres = {};
     aMovieDB.forEach(function(movie){
         var genres = movie.genres;
         genres.forEach(function(genre) {
-            byGenres[genre].push(movie);
+            if (genre in byGenres) {
+                byGenres[genre].push(movie);
+            } else {
+                byGenres[genre] = [movie];
+            }
         });
     });
 
@@ -91,7 +94,6 @@ recursive(repertoryRoot, [isNotFilm], function (err, files) {
   // Files is an array of filename
     var finished = 0;
     files.forEach(function(filePath, index) {
-        console.log("index="+index);
         var probableFilmNameAndPath = cleanFilmName(filePath);
         var search = {
             title: probableFilmNameAndPath.filmName
@@ -99,7 +101,6 @@ recursive(repertoryRoot, [isNotFilm], function (err, files) {
         if (probableFilmNameAndPath.filmDate !== null) {
             search.year = probableFilmNameAndPath.filmDate;
         }
-        console.log("los");
         omdb.get(search, true, function(err, movie) {
             if(err) {
                 
@@ -111,15 +112,15 @@ recursive(repertoryRoot, [isNotFilm], function (err, files) {
                 return console.log('Movie:'+probableFilmNameAndPath.filmName+' not found!');
             }
          
-            console.log(movie.title);
             movieDB.push(movie);
+
+            if (movieDB.length === files.length) {
+                // finished
+                var byGenres = classifyMoviesByGenre(movieDB);
+                console.log(byGenres);
+            }
         });
     });
-    // wait for the movieDB to be full
-    // COMMENT ONT FAIT LE WAIT ?
-    console.log(movieDB);
-    var byGenres = classifyMoviesByGenre(movieDB);
-    console.log(byGenres);
 });
 
 

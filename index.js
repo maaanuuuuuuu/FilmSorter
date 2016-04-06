@@ -7,6 +7,7 @@ var repertoryRoot = 'C:\\Users\\edesir\\Documents\\Boulot\\Films';
 var authorizedExtensions = ['.flv', '.mpg'];
 var fileReleasePatterns = ['DVDRip', 'DVDSCR', 'XviD-MAXSPEED'];
 
+var movieDB = [];
 
 /**
  * This function checks is pathed as a filter to the recursive function. It filters out files which are not films. Mostly depending on their extensions
@@ -18,6 +19,35 @@ function isNotFilm(file, stats) {
     var fileExtension = path.extname(file);
 
     return (!stats.isDirectory()) && (authorizedExtensions.indexOf(fileExtension) === -1);
+}
+
+/**
+ * This function classifies movies by genres
+ * @param  {[type]} aMovieDB an array of movies from the API
+ * @return {[type]}          an associative array 'genre' => [Movies]
+ */
+function classifyMoviesByGenre(aMovieDB) {
+    console.log(aMovieDB);
+    var byGenres = {};
+    aMovieDB.forEach(function(movie){
+        var genres = movie.genres;
+        genres.forEach(function(genre) {
+            byGenres[genre].push(movie);
+        });
+    });
+
+    return byGenres;
+}
+
+
+/**
+ * This function creates an easily usable classification tree 
+ * @param  {[type]} maxNbPerCategory [description]
+ * @param  {[type]} aMovieDB    [description]
+ * @return {[type]}             [description]
+ */
+function smartClassifier (maxNbPerCategory, aMovieDB) {
+
 }
 
 /**
@@ -59,32 +89,37 @@ function cleanFilmName(filePath) {
 
 recursive(repertoryRoot, [isNotFilm], function (err, files) {
   // Files is an array of filename
-  files.forEach(function(filePath) {
-    var probableFilmNameAndPath = cleanFilmName(filePath);
-    var search = {
-        title: probableFilmNameAndPath.filmName
-    };
-    if (probableFilmNameAndPath.filmDate !== null) {
-        search.year = probableFilmNameAndPath.filmDate;
-    }
-    omdb.get(search, true, function(err, movie) {
-        if(err) {
-            
-            return console.error(err);
+    var finished = 0;
+    files.forEach(function(filePath, index) {
+        console.log("index="+index);
+        var probableFilmNameAndPath = cleanFilmName(filePath);
+        var search = {
+            title: probableFilmNameAndPath.filmName
+        };
+        if (probableFilmNameAndPath.filmDate !== null) {
+            search.year = probableFilmNameAndPath.filmDate;
         }
-     
-        if(!movie) {
-            
-            return console.log('Movie:'+probableFilmNameAndPath.filmName+' not found!');
-        }
-     
-        console.log('%s (%d) %d/10', movie.title, movie.year, movie.imdb.rating);
-        console.log(movie.plot);
-        // console.log(movie.genres);
-        // console.log(movie);
-       
+        console.log("los");
+        omdb.get(search, true, function(err, movie) {
+            if(err) {
+                
+                return console.error(err);
+            }
+         
+            if(!movie) {
+                
+                return console.log('Movie:'+probableFilmNameAndPath.filmName+' not found!');
+            }
+         
+            console.log(movie.title);
+            movieDB.push(movie);
+        });
     });
-  });
+    // wait for the movieDB to be full
+    // COMMENT ONT FAIT LE WAIT ?
+    console.log(movieDB);
+    var byGenres = classifyMoviesByGenre(movieDB);
+    console.log(byGenres);
 });
 
 

@@ -3,9 +3,15 @@ var recursive = require('recursive-readdir');
 var path = require('path');
 var omdb = require('omdb');
 
-var repertoryRoot = 'C:\\Users\\edesir\\Documents\\Boulot\\Films';
+String.prototype.regexIndexOf = function(regex, startpos) {
+    var indexOf = this.substring(startpos || 0).search(regex);
+    return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
+};
+
+var repertoryRoot = 'C:\\Users\\edesir\\Documents\\Boulot\\FilmSorter\\FilmFolder';
 var authorizedExtensions = ['.flv', '.mpg'];
-var fileReleasePatterns = ['DVDRip', 'DVDSCR', 'XviD-MAXSPEED'];
+var fileReleasePatterns = ['subtitles',"director's cut",'dvd', 'brrip', 'klaxxon', 'dvdrip', 'dvdscr', 'xvid-maxspeed', 'tbs', 'ntsc', /\[(.+?)\]/g, /\((.+?)\)/g, 'xvid', 'dvdrip', 'axxo', 'phrax', 'r5', 'fxg', 'unrated'];
+var toBeReplacedBySpace = ['.', '-', '_'];
 
 var movieDB = [];
 
@@ -50,7 +56,7 @@ function classifyMoviesByGenre(aMovieDB) {
  * @param  {[type]} minNbPerCategory [description]
  * @return {[type]}                  [description]
  */
-function smartClassifier (aMovieDB, maxNbPerCategory, minNbPerCategory) {
+function smartClassifier(aMovieDB, maxNbPerCategory, minNbPerCategory) {
 
 }
 
@@ -78,10 +84,19 @@ function cleanFilmName(filePath) {
         .replace(/\.[^/.]+$/, '')
         // no release date
         .replace(/\(([^)]+)\)/, '');
-    // no file relase terms
-    fileReleasePatterns.forEach(function(fileReleasePattern) {
-        filmName = filmName.replace(fileReleasePattern, '');
+    filmName = filmName.toLowerCase();
+    // replace dots by spaces
+    toBeReplacedBySpace.forEach(function(separator) {
+        filmName = filmName.replace(separator, ' ');
     });
+    // no file relase terms (delete everything after that)
+    fileReleasePatterns.forEach(function(fileReleasePattern) {
+        var indexSub = filmName.regexIndexOf(fileReleasePattern);
+        if (indexSub > 0) {
+            filmName = filmName.substring(0, indexSub);
+        }
+    });
+    // 
     // trim
     filmName = filmName.trim();
 
@@ -93,8 +108,12 @@ function cleanFilmName(filePath) {
 
 recursive(repertoryRoot, [isNotFilm], function (err, files) {
   // Files is an array of filename
-    var finished = 0;
+    var realIndex = 0;
+    var i = 0;
+    var j = 0;
+    console.log(files.length);
     files.forEach(function(filePath, index) {
+        realIndex++;
         var probableFilmNameAndPath = cleanFilmName(filePath);
         var search = {
             title: probableFilmNameAndPath.filmName
@@ -110,18 +129,26 @@ recursive(repertoryRoot, [isNotFilm], function (err, files) {
          
             if(!movie) {
                 
-                return console.log('Movie:'+probableFilmNameAndPath.filmName+' not found!');
+                i++;
+                // console.log('Movie:'+probableFilmNameAndPath.filmName+' not found!');
+            } else {
+
+                j++;
+                // console.log('Movie:'+probableFilmNameAndPath.filmName+' found!');
             }
          
             movieDB.push(movie);
-
-            if (movieDB.length === files.length) {
+            if (realIndex === files.length) {
                 // finished
-                var byGenres = classifyMoviesByGenre(movieDB);
-                console.log(byGenres);
+                // var byGenres = classifyMoviesByGenre(movieDB);
+                // console.log(byGenres);
+                console.log("Did Find: "+j);
+                console.log("Did Not Find: "+i);
+                
             }
         });
     });
+    
 });
 
 
